@@ -1,0 +1,203 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="dark">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Server Genius — Game Server Calculator</title>
+<meta name="description" content="Size a dedicated game server before you rent it. RAM, CPU, disk and bandwidth for Minecraft, Hytale, Rust, Palworld, ARK, Valheim, Project Zomboid, Satisfactory, FiveM, Arma Reforger, Counter-Strike and voice servers.">
+<meta name="theme-color" content="#6c5ce7">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="Server Genius">
+
+<meta property="og:type" content="website">
+<meta property="og:title" content="Server Genius — Game Server Calculator">
+<meta property="og:description" content="RAM, CPU, disk and bandwidth for 16 game and voice servers.">
+<!-- Absolute URLs required: social scrapers do not resolve relative paths.
+     Change both if you move to a custom domain. -->
+<meta property="og:url" content="https://nucl3arn30n.github.io/game-server-calculator/">
+<meta property="og:image" content="https://nucl3arn30n.github.io/game-server-calculator/assets/img/og.png">
+<meta name="twitter:card" content="summary_large_image">
+
+<link rel="icon" href="assets/img/favicon.svg" type="image/svg+xml">
+<link rel="apple-touch-icon" href="assets/img/icon-192.png">
+<link rel="manifest" href="manifest.webmanifest">
+
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=DM+Sans:ital,wght@0,400;0,500;0,600;0,700;1,400&family=Playfair+Display:ital,wght@0,400;0,700;1,400&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+<link rel="stylesheet" href="assets/css/style.css">
+</head>
+<body>
+
+<div class="ambg"></div>
+
+<header>
+  <div class="header-inner">
+    <a class="logo" href="./">
+      <div class="logo-icon"><i class="fa-solid fa-server"></i></div>
+      <div class="logo-text">
+        <span class="p1">Server</span>
+        <span class="p2">Genius</span>
+      </div>
+    </a>
+    <div class="spacer"></div>
+    <button class="hlink" id="langBtn" type="button" data-i18n-title="nav.lang">
+      <i class="fa-solid fa-language"></i><span class="num" id="langLabel">EN</span>
+    </button>
+    <button class="hlink" id="themeBtn" type="button" data-i18n-title="nav.theme">
+      <i class="fa-solid fa-moon" id="themeIcon"></i>
+    </button>
+    <a class="hlink" href="https://github.com/NUCL3ARN30N/game-server-calculator" target="_blank" rel="noopener">
+      <i class="fa-brands fa-github"></i><span class="label" data-i18n="nav.github">Source</span>
+    </a>
+  </div>
+</header>
+
+<div class="hero">
+  <div class="hero-inner">
+    <span class="hero-badge"><i class="fa-solid fa-calculator"></i><span data-i18n="hero.badge">6 server flavours · 3 games</span></span>
+    <h1 class="hero-title">
+      <span data-i18n="hero.a">Size it once.</span>
+      <span class="hero-accent" data-i18n="hero.b">Rent it right.</span>
+    </h1>
+    <p class="hero-desc" data-i18n="app.lead"></p>
+  </div>
+</div>
+
+<main class="wrap">
+
+
+
+  <section class="section">
+    <div class="eyebrow-row">
+      <p class="eyebrow" data-i18n="game.pick">Game</p>
+      <div class="gsearch">
+        <i class="fa-solid fa-magnifying-glass"></i>
+        <input type="search" id="gameSearch" data-i18n-placeholder="g.search" placeholder="Filter games…"
+               autocomplete="off" spellcheck="false" aria-controls="games">
+      </div>
+    </div>
+    <div class="games" id="games" role="group" aria-label="Choose a game"></div>
+    <p class="empty" id="gamesEmpty" hidden data-i18n="g.none">No game matches that.</p>
+  </section>
+
+  <div class="split">
+
+    <div class="col left">
+    <section class="card">
+      <div class="card-head">
+        <i class="fa-solid fa-sliders"></i>
+        <h2 data-i18n="cfg.title">Your server</h2>
+        <div class="spacer"></div>
+        <button class="hlink" id="shareBtn" type="button">
+          <i class="fa-solid fa-link"></i><span class="label" data-i18n="cfg.share">Copy link</span>
+        </button>
+        <button class="hlink" id="resetBtn" type="button">
+          <i class="fa-solid fa-rotate-left"></i><span class="label" data-i18n="cfg.reset">Reset</span>
+        </button>
+      </div>
+      <div class="card-body" id="fields"></div>
+    </section>
+
+    </div>
+
+    <div class="col">
+
+      <section class="card">
+        <div class="card-head">
+          <i class="fa-solid fa-server"></i>
+          <h2 data-i18n="r.title">What to rent</h2>
+          <div class="spacer"></div>
+          <a class="hlink" id="reportBtn" href="https://github.com/NUCL3ARN30N/game-server-calculator/issues/new" target="_blank" rel="noopener">
+            <i class="fa-regular fa-flag"></i><span class="label" data-i18n="r.report">Numbers look wrong?</span>
+          </a>
+        </div>
+        <div class="card-body">
+          <div class="stats" id="stats"></div>
+          <div class="tick" id="tick"></div>
+          <div class="tier" id="tier"></div>
+        </div>
+      </section>
+
+      <section class="card">
+        <div class="card-head">
+          <i class="fa-solid fa-scale-unbalanced"></i>
+          <h2 data-i18n="cap.title">Already have a box?</h2>
+        </div>
+        <div class="card-body">
+          <p class="lead" data-i18n="cap.lead"></p>
+          <div class="cap">
+            <label class="cap__in">
+              <span data-i18n="cap.ram">RAM</span>
+              <input type="number" id="capRam" min="1" max="512" step="1" value="8" inputmode="numeric">
+              <em>GB</em>
+            </label>
+            <label class="cap__in">
+              <span data-i18n="cap.cores">Cores</span>
+              <input type="number" id="capCores" min="1" max="128" step="1" value="4" inputmode="numeric">
+            </label>
+            <div class="cap__out" id="capOut"></div>
+          </div>
+        </div>
+      </section>
+
+      <section class="card" id="notesPanel">
+        <div class="card-head">
+          <i class="fa-solid fa-lightbulb"></i>
+          <h2 data-i18n="r.notes">Worth knowing</h2>
+        </div>
+        <div class="card-body"><ul class="notes" id="notes"></ul></div>
+      </section>
+
+      <section class="card">
+        <div class="card-head">
+          <i class="fa-solid fa-terminal"></i>
+          <h2 data-i18n="s.title">Ready to paste</h2>
+        </div>
+        <div class="card-body">
+          <div class="tabs" id="tabs" role="tablist"></div>
+          <div class="codebox">
+            <button class="hlink copy" id="copyBtn" type="button">
+              <i class="fa-solid fa-copy"></i><span data-i18n="s.copy">Copy</span>
+            </button>
+            <pre id="code"></pre>
+          </div>
+        </div>
+      </section>
+
+    </div>
+  </div>
+
+  <section class="card" id="comparePanel">
+    <div class="card-head">
+      <i class="fa-solid fa-scale-balanced"></i>
+      <h2 data-i18n="c.title">Same server, different software</h2>
+    </div>
+    <div class="card-body">
+      <p class="lead" data-i18n="c.lead"></p>
+      <div class="tablewrap"><table id="compare"></table></div>
+      <p class="footnote">
+        <span class="star">*</span>
+        <span data-i18n="c.footnote"></span>
+      </p>
+    </div>
+  </section>
+
+</main>
+
+<button class="mbar" id="mbar" type="button"></button>
+
+<footer>
+  <div class="wrap">
+    <p data-i18n="ft.disclaimer"></p>
+    <a href="methodology.html" data-i18n="ft.method">How the numbers are calculated</a>
+  </div>
+</footer>
+
+<script src="assets/js/i18n.js"></script>
+<script src="assets/js/calculators.js"></script>
+<script src="assets/js/app.js"></script>
+</body>
+</html>

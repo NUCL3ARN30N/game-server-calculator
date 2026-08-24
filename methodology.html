@@ -1,0 +1,532 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="dark">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>How the numbers are calculated — Server Genius</title>
+<meta name="description" content="Every formula, constant and source behind the Server Genius game server calculator, with a confidence rating per game.">
+<meta name="theme-color" content="#6c5ce7">
+<link rel="icon" href="assets/img/favicon.svg" type="image/svg+xml">
+<link rel="manifest" href="manifest.webmanifest">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=DM+Sans:ital,wght@0,400;0,500;0,600;0,700;1,400&family=Playfair+Display:ital,wght@0,400;0,700;1,400&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+<link rel="stylesheet" href="assets/css/style.css">
+</head>
+<body>
+
+<div class="ambg"></div>
+
+<header>
+  <div class="header-inner">
+    <a class="logo" href="./">
+      <div class="logo-icon"><i class="fa-solid fa-server"></i></div>
+      <div class="logo-text"><span class="p1">Server</span><span class="p2">Genius</span></div>
+    </a>
+    <div class="spacer"></div>
+    <button class="hlink" id="themeBtn" type="button" title="Switch theme">
+      <i class="fa-solid fa-moon" id="themeIcon"></i>
+    </button>
+    <a class="hlink" href="./"><i class="fa-solid fa-arrow-left"></i><span class="label">Calculator</span></a>
+    <a class="hlink" href="https://github.com/NUCL3ARN30N/game-server-calculator" target="_blank" rel="noopener">
+      <i class="fa-brands fa-github"></i><span class="label">Source</span>
+    </a>
+  </div>
+</header>
+
+<div class="hero">
+  <div class="hero-inner">
+    <span class="hero-badge"><i class="fa-solid fa-flask"></i>Methodology</span>
+    <h1 class="hero-title">How the numbers <span class="hero-accent">are calculated.</span></h1>
+    <p class="hero-desc">
+      Every formula, every constant, and where it came from. These are regression fits to
+      documented figures and reported production configurations — not vendor marketing, and
+      not guarantees. Argue with them.
+    </p>
+  </div>
+</div>
+
+<main class="wrap">
+
+  <section class="card section">
+    <div class="card-head"><i class="fa-solid fa-circle-info"></i><h2>Reading this page</h2></div>
+    <div class="card-body prose">
+      <p>
+        Each game below lists the formula the calculator actually runs, the constants it uses,
+        and a confidence rating. The constant tables and the defaults table are read live from
+        <code>assets/js/calculators.js</code> when this page loads, so they cannot drift out of
+        sync with the tool — if the code changes, this page changes with it.
+      </p>
+      <p class="note note--info" style="margin-top:14px">
+        <i class="fa-solid fa-language"></i>
+        <span>This reference is maintained in English only, like the README. The calculator
+        itself is bilingual. — <em lang="de">Diese Referenz wird nur auf Englisch gepflegt,
+        wie das README. Der Rechner selbst ist zweisprachig.</em></span>
+      </p>
+      <h3>Confidence ratings</h3>
+      <ul class="conf-key">
+        <li><span class="conf conf--high">High</span> Primary documentation from the developer, or a figure several independent hosts agree on.</li>
+        <li><span class="conf conf--med">Medium</span> Community consensus and reported production configurations, no authoritative spec.</li>
+        <li><span class="conf conf--low">Low</span> Extrapolated from a related title or a small sample. Treat as a starting point and measure.</li>
+      </ul>
+    </div>
+  </section>
+
+  <section class="card section">
+    <div class="card-head"><i class="fa-solid fa-table-list"></i><h2>Every default, live</h2></div>
+    <div class="card-body">
+      <p class="lead">
+        Computed in your browser right now from the same code the calculator uses. Every default
+        is required to sit in the Comfortable band; CI fails the build if one drops below 50%
+        tick headroom.
+      </p>
+      <div class="tablewrap"><table id="defaults"></table></div>
+    </div>
+  </section>
+
+  <section class="card section">
+    <div class="card-head"><i class="fa-solid fa-ruler-combined"></i><h2>Shared rules</h2></div>
+    <div class="card-body prose">
+      <h3>Memory is rounded to real hardware</h3>
+      <p>
+        Nobody rents 6.3 GB. Every memory figure is rounded up to the next rung of a ladder that
+        matches how machines and hosting plans are actually sold:
+      </p>
+      <pre class="mini" id="ramSteps"></pre>
+      <p>
+        This is why small changes sometimes move nothing and one more player occasionally jumps
+        a whole tier — the underlying number is continuous, the ladder is not.
+      </p>
+
+      <h3>Tick budgets</h3>
+      <p>
+        The headroom meter estimates how long one server tick takes against the time it has.
+        Different engines have wildly different budgets, which is the main reason a
+        Counter-Strike server and a Minecraft server want opposite hardware:
+      </p>
+      <div class="tablewrap"><table id="budgets"></table></div>
+      <p>
+        Green is under 55% of budget, amber to 80%, red beyond. The estimate covers the steady
+        state — it does not model chunk-generation bursts, autosave stalls or a mob farm built
+        specifically to hurt you.
+      </p>
+
+      <h3>Monthly transfer</h3>
+      <p>
+        Peak uplink converted at 40% average utilisation, because the player slider is a peak
+        figure and servers are not full at 04:00:
+      </p>
+      <pre class="mini">transferGB = peakMbps × 0.40 × 2,592,000 s ÷ 8 ÷ 1000</pre>
+
+      <h3>Hardware class</h3>
+      <p>
+        The recommendation maps onto something rentable rather than a raw spec. A shared vCPU is
+        fine up to about 8 GB and 3.5 GHz; past that, throttling on shared cores shows up as lag
+        spikes precisely at peak hours, so the calculator asks for dedicated vCPU or bare metal.
+      </p>
+    </div>
+  </section>
+
+  <section class="card section">
+    <div class="card-head"><i class="fa-solid fa-cube"></i><h2>Minecraft</h2><div class="spacer"></div><span class="conf conf--high">High</span></div>
+    <div class="card-body prose">
+      <p>
+        <strong>Memory is modelled per loaded chunk, not per player.</strong> Most calculators
+        multiply a per-player figure by head count, which is how hosting is priced but not how
+        the server works. What the JVM holds is resident chunks — palettes, heightmaps, light
+        data and the entities inside them. Players standing near each other share almost all of
+        those chunks, so memory grows sublinearly with population.
+      </p>
+      <pre class="mini">chunksPerPlayer = (2 × viewDistance + 1)²
+loadedChunks    = min(worldChunks, chunksPerPlayer × players^0.65)
+
+liveSet = base + loadedChunks × kbPerChunk × (1 + entityFactor)
+        + players × perPlayerMb + plugins × 8 MB + mods × 25 MB
+
+heap    = liveSet × (1.7 + players × 0.004)
+system  = heap × 1.25 + 1 GB</pre>
+      <p>
+        The 0.65 exponent is the clustering term. The GC multiplier grows with player count
+        because allocation rate does — a JVM held near its live set collects continuously. The
+        <code>× 1.25 + 1</code> covers off-heap: metaspace, code cache, direct buffers, thread
+        stacks, GC structures, and the OS.
+      </p>
+      <div class="tablewrap"><table id="mcTable"></table></div>
+      <h3>Cores</h3>
+      <pre class="mini">cores = round(1 + load/40 + players/60 + mods/150)     // serial flavours
+load  = players × (simDistance/6)^1.4 × cpuFactor
+      × (1 + plugins × 0.008) × (1 + mods × 0.004)
+mspt  = 3 + effLoad × 0.28</pre>
+      <p>
+        One thread runs the tick loop, always. Everything above it — GC, netty, chunk-generation
+        workers — scales with actual work, so a single-player world at view distance 3 asks for
+        one core. Folia and Pumpkin are the exceptions:
+      </p>
+      <pre class="mini">parallel = 1 + (cores - 1) × 0.45
+effLoad  = max(load / parallel, load × 0.25)</pre>
+      <p>
+        That <code>load × 0.25</code> floor matters more than the divisor. Region sharding is
+        bounded by the busiest region, and players cluster at spawn, shops and events — so no
+        core count drives tick time to zero. Without the floor the model claimed a 300-player
+        Folia server would be comfortable on a 3.0 GHz box, which is nonsense.
+      </p>
+      <p>
+        <strong>Simulation distance is exponential; view distance is not.</strong> That asymmetry
+        is the most useful thing this calculator has to say. Raising view distance costs
+        bandwidth and some chunk memory; raising simulation distance costs tick time, and tick
+        time is what players feel.
+      </p>
+      <p>
+        Disk assumes ~6000 chunks generated per player over the server's life at 70 KB per chunk,
+        capped by the world border, plus backups at 45% compression.
+      </p>
+      <ul class="srcs">
+        <li><a href="https://docs.papermc.io/" target="_blank" rel="noopener">PaperMC documentation</a> — configuration surfaces, Aikar's flags, tuning guidance</li>
+        <li><a href="https://papermc.io/software/folia" target="_blank" rel="noopener">Folia</a> — region-sharded threading model and its caveats</li>
+        <li><a href="https://pumpkinmc.org/" target="_blank" rel="noopener">Pumpkin</a> and <a href="https://github.com/Pumpkin-MC/Pumpkin" target="_blank" rel="noopener">its repository</a> — native memory figures, plugin API, Bedrock support</li>
+        <li><a href="https://spark.lucko.me/" target="_blank" rel="noopener">Spark profiler</a> — the tool to check these numbers against your own server</li>
+      </ul>
+    </div>
+  </section>
+
+  <section class="card section">
+    <div class="card-head"><i class="fa-solid fa-dice-d20"></i><h2>Hytale</h2><div class="spacer"></div><span class="conf conf--high">High</span></div>
+    <div class="card-body prose">
+      <p>
+        Hytale's server runs on the JVM, so it gets the same chunk-residency treatment as
+        Minecraft — but with <strong>player spread as a variable</strong> rather than a fixed
+        clustering exponent. That comes directly from the PerformanceSaver documentation, which
+        states the load curve outright: a large group in a small area has a relatively small
+        resource footprint, whereas a small number of players each exploring independently
+        causes significant CPU load and RAM consumption.
+      </p>
+      <pre class="mini">loadedChunks = (2 × viewRadius + 1)² × players^spread
+spread = 0.40 clustered | 0.70 mixed | 0.95 explorers
+
+liveSet = 700 MB + loadedChunks × 70 KB × 1.3 + players × 4 MB + mods × 15 MB
+if PerformanceSaver: liveSet × 0.75, gcHeadroom 1.75 → 1.50</pre>
+      <p>
+        The <strong>PerformanceSaver toggle</strong> models what the plugin actually does: caps
+        TPS at a stable 20 (and 5 when empty), shrinks the view radius when it detects low TPS or
+        GC pressure, and forces collection when loaded-chunk counts suggest memory can be freed.
+        With it on, the server degrades gracefully instead of crashing, so you can size for the
+        normal case rather than the worst one. At 32 players that is the difference between a
+        4 GB and a 6 GB box.
+      </p>
+      <p>
+        Hytale was cancelled in June 2025, repurchased by its original founder in November 2025,
+        and has been in Early Access since 13 January 2026. The server is still moving fast —
+        re-check after major updates.
+      </p>
+      <ul class="srcs">
+        <li><a href="https://www.curseforge.com/hytale/mods/nitrado-performancesaver" target="_blank" rel="noopener">Nitrado PerformanceSaver</a> — the load-curve description this model is built on</li>
+        <li><a href="https://github.com/nitrado/hytale-plugin-performance-saver" target="_blank" rel="noopener">PerformanceSaver source</a> — TPS limiting, dynamic view radius, GC triggering</li>
+        <li><a href="https://hytale.com/" target="_blank" rel="noopener">hytale.com</a> — patch notes and server configuration surface</li>
+      </ul>
+    </div>
+  </section>
+
+  <section class="card section">
+    <div class="card-head"><i class="fa-solid fa-fire"></i><h2>Rust</h2><div class="spacer"></div><span class="conf conf--high">High</span></div>
+    <div class="card-body prose">
+      <pre class="mini">RAM = (4 + (mapSize/1000)² × 0.5 + players × 0.04
+     + plugins × 0.05 + framework) × wipeFactor
+wipeFactor = 0.8 fresh | 1.0 mid | 1.3 late
+
+mapSave = (mapSize/1000)² × 0.035 GB × wipeFactor</pre>
+      <p>
+        Map size dominates: going from 3000 to 4500 costs more RAM than doubling the player
+        count. The wipe factor exists because entity counts grow all wipe long and memory grows
+        with them, which is why a server that was fine on day one starts swapping on day twenty.
+      </p>
+      <p>
+        Rust serialises the entire map every few minutes, so NVMe is treated as mandatory rather
+        than recommended — on spinning disks the save stall is visible to players. Note the save
+        coefficient is <code>0.035</code>, not the in-memory figure: a 3500 procedural
+        <code>.sav</code> is a few hundred megabytes, not gigabytes. An earlier version of this
+        calculator got that wrong by roughly 10×.
+      </p>
+      <ul class="srcs">
+        <li><a href="https://wiki.facepunch.com/rust/" target="_blank" rel="noopener">Facepunch Rust wiki</a> — server variables, worldsize, save behaviour</li>
+        <li><a href="https://umod.org/" target="_blank" rel="noopener">uMod / Oxide</a> — hook model; hooks run on the main thread</li>
+      </ul>
+    </div>
+  </section>
+
+  <section class="card section">
+    <div class="card-head"><i class="fa-solid fa-car-side"></i><h2>FiveM</h2><div class="spacer"></div><span class="conf conf--high">High</span></div>
+    <div class="card-body prose">
+      <pre class="mini">RAM  = 3.5 + players × 0.28 + resources × 0.015 + framework
+framework = 0 CFX Default | 1.0 ESX | 1.5 QBCore
+mspt = 4 + players × 0.2 + resources × 0.025 + framework × 2   (33 ms budget)</pre>
+      <p>
+        This matches the figure hosts converge on independently: roughly 4–6 GB base plus
+        0.3–0.5 GB per player, with resources and MLOs on top. FiveM runs sync, physics and the
+        Lua runtime dominantly on one thread, so the calculator pushes clock hard and caps cores
+        low — an 8-core at 5.4 GHz beats a 32-core at 2.6 GHz outright.
+      </p>
+      <p>
+        Above 32 slots you need OneSync and a Cfx.re licence key; the free tier reaches 48, with
+        higher Element Club tiers at 64 and 128. The database is deliberately <strong>not</strong>
+        included in these figures — give MariaDB its own budget, and move the website and Discord
+        bots off the box.
+      </p>
+      <ul class="srcs">
+        <li><a href="https://docs.fivem.net/docs/server-manual/setting-up-a-server/" target="_blank" rel="noopener">Cfx.re server manual</a> — artifacts, server.cfg, OneSync</li>
+        <li><a href="https://docs.fivem.net/docs/scripting-reference/onesync/" target="_blank" rel="noopener">OneSync reference</a> — slot tiers and entity routing</li>
+        <li>Independent host guidance (Space-Node, GoodLeaf, ElypseCloud, WebsNP, 2026) agreeing on the base-plus-per-player shape and the 33 ms budget at 30 FPS</li>
+      </ul>
+    </div>
+  </section>
+
+  <section class="card section">
+    <div class="card-head"><i class="fa-solid fa-crosshairs"></i><h2>Counter-Strike 2 and 1.6</h2><div class="spacer"></div><span class="conf conf--med">Medium</span></div>
+    <div class="card-body prose">
+      <p>
+        CS2 has the tightest budget in the calculator. A 64-tick server has <strong>15.6 ms</strong>
+        to finish a frame against Minecraft's 50, which is exactly why it asks for clock speed
+        and almost no cores or RAM. CS2 is sub-tick for hit registration, but the server still
+        runs a fixed-rate loop.
+      </p>
+      <pre class="mini">CS2   RAM  = 1.2 + players × 0.05 + plugins × 0.04
+      mspt = 1.5 + players × 0.12 × modeCost + plugins × 0.06   (15.6 ms)
+
+CS1.6 RAM  = 64 MB + players × 6 MB + plugins × 4 MB
+      mspt = 0.4 + players × 0.06 + plugins × 0.04              (10 ms, sys_ticrate 100)</pre>
+      <p>
+        CS 1.6 is from 1999 and fits in the L3 cache of a modern CPU. The smallest VPS any
+        provider sells is already overkill, and the calculator says so rather than inventing a
+        requirement. Use ReHLDS rather than stock HLDS — old builds have known
+        remote-execution holes.
+      </p>
+      <ul class="srcs">
+        <li><a href="https://developer.valvesoftware.com/wiki/Counter-Strike_2" target="_blank" rel="noopener">Valve Developer Community</a> — dedicated server setup, GSLT, rate variables</li>
+        <li><a href="https://www.amxmodx.org/" target="_blank" rel="noopener">AMX Mod X</a> — the plugin layer for 1.6</li>
+        <li><a href="https://github.com/dreamstalker/rehlds" target="_blank" rel="noopener">ReHLDS</a> — maintained HLDS replacement</li>
+      </ul>
+    </div>
+  </section>
+
+  <section class="card section">
+    <div class="card-head"><i class="fa-solid fa-paw"></i><h2>Palworld</h2><div class="spacer"></div><span class="conf conf--high">High</span></div>
+    <div class="card-body prose">
+      <pre class="mini">RAM = 5 + players × 0.5 + stage        stage = 0 early | 3 mid | 8 late</pre>
+      <p>
+        Memory climbs the longer the process runs, so the figure targets the hours before a
+        scheduled restart rather than the minutes after one. Eight players on an established
+        server lands at 16 GB, which is where the community converged. The 32-player cap is a
+        limit rather than a target — the official server struggles past sixteen on any hardware.
+      </p>
+      <p>
+        Start with <code>-useperfthreads -NoAsyncLoadingThread -UseMultithreadForDS</code>; the
+        difference is large enough to be worth verifying your launcher passes them.
+      </p>
+      <ul class="srcs">
+        <li><a href="https://tech.palworldgame.com/" target="_blank" rel="noopener">Palworld technical guide</a> — official dedicated server documentation and settings</li>
+        <li>Community reports on memory growth over uptime and restart scheduling</li>
+      </ul>
+    </div>
+  </section>
+
+  <section class="card section">
+    <div class="card-head"><i class="fa-solid fa-dragon"></i><h2>ARK: Survival Ascended and Evolved</h2><div class="spacer"></div><span class="conf conf--med">Medium</span></div>
+    <div class="card-body prose">
+      <pre class="mini">ASA  RAM = 8 + players × 0.12 + stage + mods × 0.25    stage = 0 | 3 | 7
+ASE  RAM = 6 + players × 0.10 + stage × 0.8 + mods × 0.2</pre>
+      <p>
+        <strong>Every figure is for one map.</strong> A cluster runs a separate process per map,
+        so four maps need four times the RAM, cores and disk on the same box. This is the most
+        common way people under-buy for ARK. Structures and tames dominate over player count,
+        which means decay settings do more for your memory bill than a player cap does.
+      </p>
+      <p>
+        Ascended's install alone is around 70 GB per map; Evolved is markedly lighter — roughly
+        half the memory and a quarter of the disk for the same population. The ASE figures are
+        rated medium confidence: they come from provider guidance and community reports rather
+        than a published specification.
+      </p>
+      <ul class="srcs">
+        <li><a href="https://ark.wiki.gg/" target="_blank" rel="noopener">ARK Wiki</a> — dedicated server setup, GameUserSettings, decay and structure limits</li>
+        <li>Hosting-provider specifications for ASA versus ASE per map</li>
+      </ul>
+    </div>
+  </section>
+
+  <section class="card section">
+    <div class="card-head"><i class="fa-solid fa-shield-halved"></i><h2>Valheim</h2><div class="spacer"></div><span class="conf conf--low">Low</span></div>
+    <div class="card-body prose">
+      <pre class="mini">RAM = 1.8 + players × 0.28 + stage + mods × 0.08   stage = 0 | 1.4 | 3.2</pre>
+      <p>
+        Valheim keeps a ZDO for every placed piece, dropped item and tamed animal, permanently.
+        Build count drives memory far harder than head count, which is why the stage selector
+        moves the numbers more than the player slider. Ten players is the built-in cap.
+      </p>
+      <p>
+        Rated low confidence: this is fitted from provider figures and community reports rather
+        than a published server specification, and the ZDO growth curve in particular is a
+        rough approximation. If you run a long-lived Valheim world, your measurements would
+        genuinely improve this model.
+      </p>
+      <ul class="srcs">
+        <li><a href="https://valheim.com/" target="_blank" rel="noopener">Valheim</a> — dedicated server tooling and the 10-player cap</li>
+        <li><a href="https://github.com/lloesche/valheim-server-docker" target="_blank" rel="noopener">lloesche/valheim-server</a> — the reference container and its documentation</li>
+      </ul>
+    </div>
+  </section>
+
+  <section class="card section">
+    <div class="card-head"><i class="fa-solid fa-biohazard"></i><h2>Project Zomboid</h2><div class="spacer"></div><span class="conf conf--high">High</span></div>
+    <div class="card-body prose">
+      <pre class="mini">heap = 2 + players × 0.45 + mods × 0.02
+mspt = 6 + players × 0.5 × populationMultiplier + mods × 0.05</pre>
+      <p>
+        This follows the project's own guidance of roughly 2 GB plus half a gigabyte per player.
+        Zomboid runs on the JVM, so the calculator reports a heap — and that heap is set in
+        <code>ProjectZomboid64.json</code>, not on the command line. Giving the container more
+        memory without editing that file achieves nothing, which is a common and expensive
+        misunderstanding.
+      </p>
+      <p>
+        Zombie population multiplies the cost of every tick; doubling it costs more than doubling
+        your players. Above roughly 32 players, map streaming rather than simulation becomes the
+        bottleneck and disk speed starts to matter as much as clock.
+      </p>
+      <ul class="srcs">
+        <li><a href="https://pzwiki.net/wiki/Dedicated_server" target="_blank" rel="noopener">PZ Wiki — dedicated server</a> — memory guidance, sandbox variables, JSON heap configuration</li>
+      </ul>
+    </div>
+  </section>
+
+  <section class="card section">
+    <div class="card-head"><i class="fa-solid fa-industry"></i><h2>Satisfactory</h2><div class="spacer"></div><span class="conf conf--high">High</span></div>
+    <div class="card-body prose">
+      <pre class="mini">RAM = 5 + stage + players × 0.7 + mods × 0.15
+stage = 0 early | 2.5 mid | 6 late | 12 megabase</pre>
+      <p>
+        A four-player mid-game server lands on 12 GB, matching Coffee Stain's own recommendation
+        for a dedicated server. The factory simulation runs on one thread: clock speed sets your
+        tick rate and extra cores only help autosaves and networking. Autosave spikes can briefly
+        double resident memory, so the recommendation keeps headroom above the steady state.
+      </p>
+      <ul class="srcs">
+        <li><a href="https://satisfactory.fandom.com/wiki/Dedicated_servers" target="_blank" rel="noopener">Satisfactory Wiki — dedicated servers</a> — official requirements and configuration</li>
+      </ul>
+    </div>
+  </section>
+
+  <section class="card section">
+    <div class="card-head"><i class="fa-solid fa-helmet-safety"></i><h2>Arma Reforger and Arma 4</h2><div class="spacer"></div><span class="conf conf--med">Medium</span></div>
+    <div class="card-body prose">
+      <pre class="mini">Reforger RAM = 3 + players × 0.12 + scenario + mods × 0.15
+Arma 4   RAM = same × 1.5              scenario = 0 GM | 1.4 Conflict | 2.2 modded</pre>
+      <p>
+        On Enfusion the AI count drives CPU, not the player count, which is why the scenario
+        selector moves the numbers more than the player slider. Conflict spawns AI continuously
+        across the whole map and is the usual reason a Reforger server stutters. The
+        <code>networkViewDistance</code> setting is the other big lever — it decides how many
+        entities the server replicates per player.
+      </p>
+      <p class="note note--danger" style="margin-top:14px">
+        <i class="fa-solid fa-circle-exclamation"></i>
+        <span><strong>Arma 4 has not been released.</strong> Bohemia Interactive targets 2027 and
+        no dedicated server has ever run. Those figures are Arma Reforger scaled by 1.5 for a
+        larger Enfusion title. They are a planning placeholder, not a specification, and should
+        be re-checked at launch.</span>
+      </p>
+      <ul class="srcs">
+        <li><a href="https://community.bistudio.com/wiki/Arma_Reforger:Server_Hosting" target="_blank" rel="noopener">Bohemia Interactive — Reforger server hosting</a> — SteamCMD setup, startup parameters, BattlEye</li>
+        <li><a href="https://community.bistudio.com/wiki/Arma_Reforger:Server_Config" target="_blank" rel="noopener">Reforger server config reference</a> — every config.json field, scenario IDs, networkViewDistance</li>
+        <li>Host guidance converging on 8 GB and 4 cores at 32 players, 16 GB at 64 — which is what this model reproduces</li>
+        <li><a href="https://community.bistudio.com/wiki/Category:Arma_4" target="_blank" rel="noopener">Bohemia Interactive — Arma 4</a> — confirms 2027 target and Enfusion engine, nothing more</li>
+      </ul>
+    </div>
+  </section>
+
+  <section class="card section">
+    <div class="card-head"><i class="fa-solid fa-headset"></i><h2>TeamSpeak and Mumble</h2><div class="spacer"></div><span class="conf conf--med">Medium</span></div>
+    <div class="card-body prose">
+      <p>
+        Voice servers are the odd shape here, and that is the point of including them: not every
+        server is CPU-bound. A voice server is a packet mirror, not a simulation. Each talker's
+        stream is duplicated to every listener, so uplink grows with talkers × listeners while
+        CPU and RAM stay nearly flat.
+      </p>
+      <pre class="mini">talkers = users × talkRatio        0.08 quiet | 0.20 mixed | 0.40 busy
+uplink  = talkers × (users - 1) × bitrate × 1.35   (1.35 = packet overhead)
+
+TeamSpeak bitrate  25 / 45 / 77 kbit/s      base 60 MB + 1.2 MB per user
+Mumble    bitrate  24 / 40 / 72 kbit/s      base 25 MB + 1.2 MB per user</pre>
+      <p>
+        Bandwidth is quadratic in one big channel and near-linear across several small ones,
+        which is the single most useful thing to know when running one. Murmur idles under 50 MB
+        and has no slot licence; a free TeamSpeak licence caps a virtual server at 32 slots, with
+        the free non-profit licence raising that to 512 across up to 10 virtual servers.
+      </p>
+      <p>
+        The tick budget is 20 ms, the Opus frame interval — every packet has to be mirrored
+        within one frame. Rated medium: the bitrates are documented, the talk-ratio presets are
+        a modelling choice rather than a measurement.
+      </p>
+      <ul class="srcs">
+        <li><a href="https://www.mumble.info/documentation/" target="_blank" rel="noopener">Mumble documentation</a> — bandwidth is a per-client ceiling in bits/s, Opus settings</li>
+        <li><a href="https://support.teamspeak.com/" target="_blank" rel="noopener">TeamSpeak support</a> — licensing tiers and slot limits</li>
+        <li><a href="https://opus-codec.org/" target="_blank" rel="noopener">Opus codec</a> — frame sizes and bitrate ranges</li>
+      </ul>
+    </div>
+  </section>
+
+  <section class="card section">
+    <div class="card-head"><i class="fa-solid fa-triangle-exclamation"></i><h2>What is not modelled</h2></div>
+    <div class="card-body prose">
+      <p>
+        Being explicit about the gaps is more useful than pretending there aren't any. The
+        calculator does not account for:
+      </p>
+      <ul>
+        <li>Chunk-generation bursts when players first explore, which can briefly dwarf the steady state</li>
+        <li>Geyser and Bedrock clients, world pregeneration jobs, and dynmap-style renderers</li>
+        <li>Redstone contraptions and mob farms built specifically to hurt you</li>
+        <li>Hosting-provider CPU throttling and noisy neighbours on shared cores</li>
+        <li>Databases, web panels, Discord bots and voice servers running on the same box</li>
+        <li>Any plugin, mod or resource that is simply written badly — usually the real answer</li>
+      </ul>
+      <p>
+        Measure once you are live. <a href="https://spark.lucko.me/" target="_blank" rel="noopener">Spark</a>
+        for Minecraft and Zomboid, <code>resmon</code> or txAdmin for FiveM, <code>server.fps</code>
+        and <code>perf 2</code> for Rust, <code>docker stats</code> or <code>htop</code> for
+        anything else.
+      </p>
+      <div class="tier" style="margin-top:18px">
+        <div class="tier__icon"><i class="fa-regular fa-flag"></i></div>
+        <div>
+          <div class="tier__t">Found a number that does not match your server?</div>
+          <div class="tier__d">
+            Real measurements from production are the only thing that improves these models, and
+            they are the most valuable contribution this project can get.
+            <a href="https://github.com/NUCL3ARN30N/game-server-calculator/issues/new?labels=calibration" target="_blank" rel="noopener">Open a calibration issue</a>
+            — or use the report button on any result in the calculator, which fills in your
+            configuration for you.
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+</main>
+
+<footer>
+  <div class="wrap">
+    <p>
+      Estimates, not guarantees. Every world, plugin set and player base is different.
+      Last reviewed against sources in August 2026.
+    </p>
+    <a href="./">Back to the calculator</a>
+  </div>
+</footer>
+
+<script src="assets/js/i18n.js"></script>
+<script src="assets/js/calculators.js"></script>
+<script src="assets/js/methodology.js"></script>
+</body>
+</html>
