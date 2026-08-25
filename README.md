@@ -15,7 +15,7 @@
 
 ## Quick Start
 
-**Live at:** [nucl3arn30n.github.io/game-server-calculator](https://nucl3arn30n.github.io/game-server-calculator/)
+**Live at:** [https://gsc.genius-space.org](https://gsc.genius-space.org)
 
 Pick a game, describe the server you want to run, and read off the hardware. Every number
 updates live as you move a slider.
