@@ -184,6 +184,7 @@ const STRINGS = {
   'r.over': { en: 'Overloaded', de: 'Überlastet' },
 
   'm.tick': { en: 'Tick', de: 'Tick' },
+  'm.heap': { en: 'Heap', de: 'Heap' },
   'm.jump': { en: 'Jump to results', de: 'Zu den Ergebnissen' },
 
   'r.tier': { en: 'Hardware class', de: 'Hardware-Klasse' },

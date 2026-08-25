@@ -172,7 +172,7 @@ function fmtVal(f, val) {
 function renderResults() {
   const r = calculate(state.game, state.values);
 
-  const ramBig = r.heapGb ?? r.systemGb;
+  const ramBig = headlineRam(r);
   const ramSub = r.heapGb !== null
     ? `${t('r.ramHeap')} · <b>${r.systemGb} GB</b> ${t('r.ramSystem')}`
     : r.procGb !== undefined
@@ -249,12 +249,20 @@ function renderCapacity() {
   });
 });
 
+/* The headline memory figure: a Java heap where the server has one, otherwise
+   the whole system. The results card and the mobile bar must agree, so both
+   read it from here - they used to disagree, and the bar quietly showed system
+   RAM under a label the card used for the heap. */
+function headlineRam(r) {
+  return r.heapGb ?? r.systemGb;
+}
+
 /* Compact readout that follows the user while they are up in the sliders. */
 function renderBar(r) {
   const ratio = r.mspt / r.tickBudget;
   const color = ratio > 0.8 ? 'var(--err)' : ratio > 0.55 ? 'var(--warn)' : 'var(--ok)';
   $('#mbar').innerHTML = `
-    <span class="mbar__item"><span class="mbar__k">${t('r.ram')}</span><span class="mbar__v">${r.systemGb} GB</span></span>
+    <span class="mbar__item"><span class="mbar__k">${r.heapGb !== null ? t('m.heap') : t('r.ram')}</span><span class="mbar__v">${headlineRam(r)} GB</span></span>
     <span class="mbar__item"><span class="mbar__k">${t('r.cpu')}</span><span class="mbar__v">${r.cores}\u00d7 ${r.clockGhz.toFixed(1)}</span></span>
     <span class="mbar__item"><span class="mbar__k">${t('r.disk')}</span><span class="mbar__v">${r.diskGb} GB</span></span>
     <span class="mbar__item"><span class="mbar__k">${t('m.tick')}</span><span class="mbar__v plain" style="color:${color}">${r.headroom}%</span></span>
